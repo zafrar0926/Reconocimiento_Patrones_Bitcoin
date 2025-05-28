@@ -179,6 +179,15 @@ def main():
         y_pred = model.predict(X_test)
         metricas = evaluar_modelo(y_test, y_pred, horizonte)
 
+        # Guardar predicciones
+        predicciones_df = pd.DataFrame({
+            'timestamp': X_test.index,
+            'real': y_test.values,
+            'prediccion': y_pred
+        })
+        predicciones_df.to_csv(f'resultados/lightgbm/predicciones_t{horizonte}.csv', index=False)
+        print(f"Predicciones guardadas en 'resultados/lightgbm/predicciones_t{horizonte}.csv'")
+
         # Guardar modelo
         joblib.dump(model, f'modelos/lightgbm/modelo_lightgbm_t{horizonte}.joblib')
 

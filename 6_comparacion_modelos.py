@@ -101,96 +101,116 @@ def generar_predicciones_futuras(modelo_xgb, modelo_lgb, modelo_sarima, df_recie
         print(f"Error al generar predicciones: {str(e)}")
         return None, None, None, None
 
+def plot_predicciones_vs_real(df_test, predicciones, horizonte, guardar_como=None):
+    """Generar gráfico de predicciones vs valores reales"""
+    plt.figure(figsize=(15, 7))
+    
+    # Valores reales
+    plt.plot(df_test.index, df_test[f'target_t{horizonte}'], 
+             color='black', label='Valores Reales', linewidth=2)
+    
+    # Predicciones de cada modelo
+    colores = {'XGBoost': 'blue', 'LightGBM': 'green', 'SARIMA': 'red'}
+    for modelo, pred in predicciones.items():
+        plt.plot(df_test.index, pred, 
+                color=colores[modelo], label=f'Predicciones {modelo}', 
+                alpha=0.7, linewidth=1.5)
+    
+    plt.title(f'Predicciones vs Valores Reales (Horizonte t+{horizonte})')
+    plt.xlabel('Fecha')
+    plt.ylabel('Retorno Logarítmico')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    
+    if guardar_como:
+        plt.savefig(guardar_como, dpi=300, bbox_inches='tight')
+    plt.close()
+
+def plot_distribucion_errores(errores, horizonte, guardar_como=None):
+    """Generar gráfico de distribución de errores"""
+    plt.figure(figsize=(12, 6))
+    
+    for modelo, error in errores.items():
+        sns.kdeplot(data=error, label=modelo)
+    
+    plt.title(f'Distribución de Errores de Predicción (Horizonte t+{horizonte})')
+    plt.xlabel('Error')
+    plt.ylabel('Densidad')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    
+    if guardar_como:
+        plt.savefig(guardar_como, dpi=300, bbox_inches='tight')
+    plt.close()
+
 def main():
     # Crear directorios necesarios
     crear_directorios()
     
-    # Definir archivos de resultados
-    archivos_resultados = {
-        'XGBoost': 'resultados/xgboost/resultados_xgboost.csv',
-        'LightGBM': 'resultados/lightgbm/resultados_lightgbm.csv',
-        'SARIMA': 'resultados/sarima/resultados_sarima.csv'
-    }
+    # Cargar datos de test
+    print("Cargando datos...")
+    df_test = pd.read_csv('datos_procesados/features/btc_features_test.csv')
+    df_test['timestamp'] = pd.to_datetime(df_test['timestamp'])
+    df_test.set_index('timestamp', inplace=True)
     
-    # Cargar resultados
-    print("Cargando resultados de los modelos...")
-    resultados = cargar_resultados(archivos_resultados)
+    # Preparar features
+    target_cols = ['target_t1', 'target_t6', 'target_t12']
+    feature_cols = [col for col in df_test.columns if col not in target_cols]
     
-    if not resultados:
-        print("No se encontraron resultados para comparar.")
-        return
-    
-    # Generar gráficos comparativos
-    print("\nGenerando gráficos comparativos...")
-    metricas = {
-        'rmse': 'RMSE',
-        'mae': 'MAE',
-        'r2': 'R²'
-    }
-    
-    for metrica, titulo in metricas.items():
-        plot_comparacion_metricas(
-            resultados,
-            metrica,
-            titulo,
-            f'graficos_comparacion/comparacion_{metrica}.png'
-        )
-    
-    # Generar tabla comparativa
-    print("\nGenerando tabla comparativa...")
-    tabla_comparativa = pd.DataFrame()
-    
-    for modelo, df in resultados.items():
-        for metrica in metricas.keys():
-            for horizonte in df.index:
-                tabla_comparativa.loc[f"{modelo}_{horizonte}", metrica] = \
-                    df.loc[horizonte, metrica]
-    
-    tabla_comparativa.to_csv('resultados/comparacion/comparacion_modelos_resumen.csv')
-    
-    # Generar predicciones futuras
-    print("\nGenerando predicciones futuras...")
-    try:
-        # Cargar datos más recientes
-        df_reciente = pd.read_csv('datos_procesados/features/btc_features_test.csv')
-        df_reciente['timestamp'] = pd.to_datetime(df_reciente['timestamp'])
-        df_reciente.set_index('timestamp', inplace=True)
+    # Para cada horizonte
+    for horizonte in [1, 6, 12]:
+        print(f"\nProcesando horizonte t+{horizonte}")
+        predicciones = {}
+        errores = {}
         
-        # Preparar datos
-        target_cols = ['target_t1', 'target_t6', 'target_t12']
-        feature_cols = [col for col in df_reciente.columns if col not in target_cols]
+        # Cargar y predecir con XGBoost
+        try:
+            modelo_xgb = joblib.load(f'modelos/xgboost/modelo_xgboost_t{horizonte}.joblib')
+            pred_xgb = modelo_xgb.predict(df_test[feature_cols])
+            predicciones['XGBoost'] = pred_xgb
+            errores['XGBoost'] = pred_xgb - df_test[f'target_t{horizonte}']
+        except Exception as e:
+            print(f"Error al cargar/predecir XGBoost: {str(e)}")
         
-        # Generar predicciones para cada horizonte
-        for horizonte in [1, 6, 12]:
-            print(f"\nPredicciones para horizonte t+{horizonte}")
-            try:
-                # Cargar modelos
-                modelo_xgb = joblib.load(f'modelos/xgboost/modelo_xgboost_t{horizonte}.joblib')
-                modelo_lgb = joblib.load(f'modelos/lightgbm/modelo_lightgbm_t{horizonte}.joblib')
-                modelo_sarima = joblib.load(f'modelos/sarima/modelo_sarima_t{horizonte}.joblib')
-                
-                # Generar predicciones
-                pred_xgb, pred_lgb, pred_sarima, sarima_ci = generar_predicciones_futuras(
-                    modelo_xgb, modelo_lgb, modelo_sarima,
-                    df_reciente, feature_cols, horizonte
-                )
-                
-                if pred_xgb is not None:
-                    print(f"XGBoost: {pred_xgb:.6f}")
-                    print(f"LightGBM: {pred_lgb:.6f}")
-                    print(f"SARIMA: {pred_sarima:.6f} [{sarima_ci['lower'].iloc[0]:.6f}, {sarima_ci['upper'].iloc[0]:.6f}]")
-                
-            except Exception as e:
-                print(f"Error al generar predicciones para t+{horizonte}: {str(e)}")
-                continue
-    
-    except Exception as e:
-        print(f"Error al generar predicciones futuras: {str(e)}")
+        # Cargar y predecir con LightGBM
+        try:
+            modelo_lgb = joblib.load(f'modelos/lightgbm/modelo_lightgbm_t{horizonte}.joblib')
+            pred_lgb = modelo_lgb.predict(df_test[feature_cols])
+            predicciones['LightGBM'] = pred_lgb
+            errores['LightGBM'] = pred_lgb - df_test[f'target_t{horizonte}']
+        except Exception as e:
+            print(f"Error al cargar/predecir LightGBM: {str(e)}")
+        
+        # Cargar y predecir con SARIMA
+        try:
+            modelo_sarima = joblib.load(f'modelos/sarima/modelo_sarima_t{horizonte}.joblib')
+            pred_sarima = modelo_sarima.get_forecast(steps=len(df_test)).predicted_mean
+            predicciones['SARIMA'] = pred_sarima
+            errores['SARIMA'] = pred_sarima - df_test[f'target_t{horizonte}']
+        except Exception as e:
+            print(f"Error al cargar/predecir SARIMA: {str(e)}")
+        
+        if predicciones:
+            # Generar gráfico de predicciones vs real
+            plot_predicciones_vs_real(
+                df_test,
+                predicciones,
+                horizonte,
+                f'graficos_comparacion/predicciones_vs_real_t{horizonte}.png'
+            )
+            
+            # Generar gráfico de distribución de errores
+            plot_distribucion_errores(
+                errores,
+                horizonte,
+                f'graficos_comparacion/distribucion_errores_t{horizonte}.png'
+            )
     
     print("\n¡Proceso completado!")
     print("Los resultados han sido guardados en:")
     print("- graficos_comparacion/")
-    print("- resultados/comparacion/comparacion_modelos_resumen.csv")
 
 if __name__ == "__main__":
     main() 

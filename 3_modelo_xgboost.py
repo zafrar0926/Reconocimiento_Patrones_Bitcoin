@@ -165,6 +165,15 @@ def main():
         metricas_test = evaluar_modelo(y_test, y_pred_test, horizonte)
         resultados_test[target] = metricas_test
 
+        # Guardar predicciones
+        predicciones_df = pd.DataFrame({
+            'timestamp': X_test.index,
+            'real': y_test.values,
+            'prediccion': y_pred_test
+        })
+        predicciones_df.to_csv(f'resultados/xgboost/predicciones_t{horizonte}.csv', index=False)
+        print(f"Predicciones guardadas en 'resultados/xgboost/predicciones_t{horizonte}.csv'")
+
         # Guardar el modelo entrenado
         joblib.dump(modelo_final, f'modelos/xgboost/modelo_xgboost_t{horizonte}.joblib')
         print(f"Modelo guardado como 'modelos/xgboost/modelo_xgboost_t{horizonte}.joblib'")
