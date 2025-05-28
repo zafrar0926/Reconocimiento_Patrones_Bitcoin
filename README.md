@@ -87,14 +87,20 @@ Se realizó un análisis exhaustivo de la serie temporal de retornos logarítmic
 
 3. **Características de la Serie**:
 
+   ![Precio de Cierre](graficos/analisis_temporal/precio_cierre.png)
+   *Fig. 1: Evolución del precio de cierre de Bitcoin*
+
    ![Distribución de Retornos](graficos/analisis_temporal/retornos_log.png)
-   *Fig. 1: Distribución de retornos logarítmicos mostrando colas pesadas y leptocurtosis*
+   *Fig. 2: Distribución de retornos logarítmicos mostrando colas pesadas y leptocurtosis*
 
    ![Autocorrelación](graficos/analisis_temporal/autocorrelacion.png)
-   *Fig. 2: Función de autocorrelación mostrando dependencias temporales*
+   *Fig. 3: Función de autocorrelación mostrando dependencias temporales*
+
+   ![Descomposición Temporal](graficos/analisis_temporal/descomposicion_temporal.png)
+   *Fig. 4: Descomposición temporal de la serie*
 
    ![Volatilidad](graficos/analisis_temporal/volatilidad.png)
-   *Fig. 3: Agrupamiento de volatilidad en diferentes períodos*
+   *Fig. 5: Agrupamiento de volatilidad en diferentes períodos*
 
    - Distribución leptocúrtica (colas pesadas)
    - Ligera asimetría positiva
@@ -179,19 +185,24 @@ La combinación de estos tres modelos nos permite:
    ```
 
 2) **Características más Importantes**:
-   ![Importancia XGBoost](graficos/xgboost/xgboost_importancia_t1.png)
-   *Fig. 4: Top 10 características más importantes según XGBoost para horizonte t+1*
+   ![Importancia XGBoost t+1](graficos/xgboost/xgboost_importancia_t1.png)
+   *Fig. 6: Top 10 características más importantes según XGBoost para horizonte t+1*
 
-   Las variables más influyentes fueron:
-   - Volatilidad histórica de 48 horas (0.185)
-   - RSI (0.142)
-   - MACD (0.128)
-   - Volatilidad de 24 horas (0.112)
-   - EMA-21 (0.098)
+   ![Importancia XGBoost t+6](graficos/xgboost/xgboost_importancia_t6.png)
+   *Fig. 7: Top 10 características más importantes según XGBoost para horizonte t+6*
 
-3) **Predicciones vs Valores Reales**:
-   ![Predicciones XGBoost](graficos/xgboost/xgboost_predicciones_t1.png)
-   *Fig. 5: Comparación de predicciones XGBoost vs valores reales para horizonte t+1*
+   ![Importancia XGBoost t+12](graficos/xgboost/xgboost_importancia_t12.png)
+   *Fig. 8: Top 10 características más importantes según XGBoost para horizonte t+12*
+
+3) **Train vs Test**:
+   ![Train vs Test XGBoost t+1](graficos/xgboost/xgboost_train_test_comparison_t1.png)
+   *Fig. 9: Comparación Train vs Test para XGBoost en horizonte t+1*
+
+   ![Train vs Test XGBoost t+6](graficos/xgboost/xgboost_train_test_comparison_t6.png)
+   *Fig. 10: Comparación Train vs Test para XGBoost en horizonte t+6*
+
+   ![Train vs Test XGBoost t+12](graficos/xgboost/xgboost_train_test_comparison_t12.png)
+   *Fig. 11: Comparación Train vs Test para XGBoost en horizonte t+12*
 
 ### B. LightGBM
 
@@ -233,19 +244,24 @@ La combinación de estos tres modelos nos permite:
    ```
 
 2) **Características más Importantes**:
-   ![Importancia LightGBM](graficos/lightgbm/lightgbm_importancia_t1.png)
-   *Fig. 6: Top 10 características más importantes según LightGBM para horizonte t+1*
+   ![Importancia LightGBM t+1](graficos/lightgbm/lightgbm_importancia_t1.png)
+   *Fig. 12: Top 10 características más importantes según LightGBM para horizonte t+1*
 
-   Variables más influyentes:
-   - Volatilidad histórica 24h (0.176)
-   - Volatilidad histórica 48h (0.158)
-   - Momentum 24h (0.134)
-   - EMA-21 (0.112)
-   - RSI (0.095)
+   ![Importancia LightGBM t+6](graficos/lightgbm/lightgbm_importancia_t6.png)
+   *Fig. 13: Top 10 características más importantes según LightGBM para horizonte t+6*
 
-3) **Predicciones vs Valores Reales**:
-   ![Predicciones LightGBM](graficos/lightgbm/lightgbm_predicciones_t1.png)
-   *Fig. 7: Comparación de predicciones LightGBM vs valores reales para horizonte t+1*
+   ![Importancia LightGBM t+12](graficos/lightgbm/lightgbm_importancia_t12.png)
+   *Fig. 14: Top 10 características más importantes según LightGBM para horizonte t+12*
+
+3) **Train vs Test**:
+   ![Train vs Test LightGBM t+1](graficos/lightgbm/lightgbm_train_test_comparison_t1.png)
+   *Fig. 15: Comparación Train vs Test para LightGBM en horizonte t+1*
+
+   ![Train vs Test LightGBM t+6](graficos/lightgbm/lightgbm_train_test_comparison_t6.png)
+   *Fig. 16: Comparación Train vs Test para LightGBM en horizonte t+6*
+
+   ![Train vs Test LightGBM t+12](graficos/lightgbm/lightgbm_train_test_comparison_t12.png)
+   *Fig. 17: Comparación Train vs Test para LightGBM en horizonte t+12*
 
 ### C. SARIMA
 
@@ -300,8 +316,14 @@ La combinación de estos tres modelos nos permite:
    ```
 
 3) **Predicciones vs Valores Reales**:
-   ![Predicciones SARIMA](graficos/sarima/sarima_predicciones_t1.png)
-   *Fig. 8: Comparación de predicciones SARIMA vs valores reales para horizonte t+1*
+   ![Predicciones SARIMA t+1](graficos/sarima/sarima_predicciones_t1.png)
+   *Fig. 18: Comparación de predicciones SARIMA vs valores reales para horizonte t+1*
+
+   ![Predicciones SARIMA t+6](graficos/sarima/sarima_predicciones_t6.png)
+   *Fig. 19: Comparación de predicciones SARIMA vs valores reales para horizonte t+6*
+
+   ![Predicciones SARIMA t+12](graficos/sarima/sarima_predicciones_t12.png)
+   *Fig. 20: Comparación de predicciones SARIMA vs valores reales para horizonte t+12*
 
 ### D. Comparación Visual de Modelos
 
@@ -311,15 +333,15 @@ La combinación de estos tres modelos nos permite:
 
    **Horizonte t+1 (1 hora)**:
    ![Predicciones vs Real t1](graficos_comparacion/predicciones_vs_real_t1.png)
-   *Fig. 9: Comparación de predicciones vs valores reales para horizonte t+1*
+   *Fig. 21: Comparación de predicciones vs valores reales para horizonte t+1*
 
    **Horizonte t+6 (6 horas)**:
    ![Predicciones vs Real t6](graficos_comparacion/predicciones_vs_real_t6.png)
-   *Fig. 10: Comparación de predicciones vs valores reales para horizonte t+6*
+   *Fig. 22: Comparación de predicciones vs valores reales para horizonte t+6*
 
    **Horizonte t+12 (12 horas)**:
    ![Predicciones vs Real t12](graficos_comparacion/predicciones_vs_real_t12.png)
-   *Fig. 11: Comparación de predicciones vs valores reales para horizonte t+12*
+   *Fig. 23: Comparación de predicciones vs valores reales para horizonte t+12*
 
 2) **Distribución de Errores**:
    
@@ -327,25 +349,25 @@ La combinación de estos tres modelos nos permite:
 
    **Horizonte t+1**:
    ![Distribución Errores t1](graficos_comparacion/distribucion_errores_t1.png)
-   *Fig. 12: Distribución de errores de predicción para horizonte t+1*
+   *Fig. 24: Distribución de errores de predicción para horizonte t+1*
 
    **Horizonte t+6**:
    ![Distribución Errores t6](graficos_comparacion/distribucion_errores_t6.png)
-   *Fig. 13: Distribución de errores de predicción para horizonte t+6*
+   *Fig. 25: Distribución de errores de predicción para horizonte t+6*
 
    **Horizonte t+12**:
    ![Distribución Errores t12](graficos_comparacion/distribucion_errores_t12.png)
-   *Fig. 14: Distribución de errores de predicción para horizonte t+12*
+   *Fig. 26: Distribución de errores de predicción para horizonte t+12*
 
 3) **Métricas de Error por Horizonte**:
    ![Comparación RMSE](graficos_comparacion/comparacion_rmse.png)
-   *Fig. 15: Comparación de RMSE por modelo y horizonte de predicción*
+   *Fig. 27: Comparación de RMSE por modelo y horizonte de predicción*
 
    ![Comparación MAE](graficos_comparacion/comparacion_mae.png)
-   *Fig. 16: Comparación de MAE por modelo y horizonte de predicción*
+   *Fig. 28: Comparación de MAE por modelo y horizonte de predicción*
 
    ![Comparación R²](graficos_comparacion/comparacion_r2.png)
-   *Fig. 17: Comparación de R² por modelo y horizonte de predicción*
+   *Fig. 29: Comparación de R² por modelo y horizonte de predicción*
 
 ## IV. Resultados y Comparación
 
@@ -433,10 +455,10 @@ Los resultados de la evaluación comparativa muestran el siguiente desempeño pa
 
 4. **Análisis de Overfitting**:
    ![Train vs Test XGBoost](graficos/xgboost/train_test_comparison_t1.png)
-   *Fig. 18: Comparación Train vs Test para XGBoost en horizonte t+1*
+   *Fig. 30: Comparación Train vs Test para XGBoost en horizonte t+1*
 
    ![Train vs Test LightGBM](graficos/lightgbm/train_test_comparison_t1.png)
-   *Fig. 19: Comparación Train vs Test para LightGBM en horizonte t+1*
+   *Fig. 31: Comparación Train vs Test para LightGBM en horizonte t+1*
 
    - Los gráficos de train vs test muestran que:
      * Ambos modelos mantienen un balance adecuado entre bias y varianza
