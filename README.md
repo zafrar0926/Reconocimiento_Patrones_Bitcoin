@@ -465,7 +465,158 @@ Los resultados de la evaluación comparativa muestran el siguiente desempeño pa
      * No hay evidencia significativa de overfitting
      * La degradación en horizontes largos se debe a la naturaleza del problema, no al modelado
 
-## V. Conclusiones y Trabajo Futuro
+## V. Retos y Aprendizajes del Proyecto
+
+Durante el desarrollo de este proyecto, enfrentamos varios desafíos significativos que nos llevaron a importantes aprendizajes y mejoras en la implementación. A continuación, detallamos los más relevantes:
+
+### A. Diagnóstico de Resultados Anómalos: Predicciones Constantes
+
+**Problema Identificado:**
+- Los modelos inicialmente producían predicciones prácticamente constantes (línea recta)
+- Este comportamiento persistía incluso al aumentar la complejidad del modelo o la cantidad de datos
+
+**Evidencia en el Código:**
+```python
+# En 3_modelo_xgboost.py y 4_modelo_lightgbm.py
+# Implementación de validación de varianza en predicciones
+def validate_predictions_variance(y_pred, min_variance_threshold=1e-6):
+    pred_variance = np.var(y_pred)
+    if pred_variance < min_variance_threshold:
+        warnings.warn(f"Varianza de predicciones muy baja: {pred_variance}")
+        return False
+    return True
+```
+
+**Solución Implementada:**
+- Identificamos que el problema estaba en cómo los modelos optimizaban el RMSE sin considerar la varianza
+- Implementamos validaciones de varianza en las predicciones
+- Ajustamos los hiperparámetros para balancear precisión y varianza
+
+### B. Control de Varianza: Métrica Personalizada
+
+**Problema Identificado:**
+- Los modelos minimizaban el error a costa de ignorar cambios importantes en la serie temporal
+- Las métricas estándar no penalizaban la falta de varianza en las predicciones
+
+**Implementación de la Solución:**
+```python
+# En 3_modelo_xgboost.py
+def penalized_rmse(y_true, y_pred):
+    rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+    pred_variance = np.var(y_pred)
+    true_variance = np.var(y_true)
+    variance_penalty = abs(true_variance - pred_variance) / true_variance
+    return rmse * (1 + variance_penalty)
+```
+
+**Resultado:**
+- Los modelos comenzaron a capturar mejor la dinámica real de los retornos
+- Se logró un mejor balance entre minimización de error y captura de tendencias
+
+### C. Prevención de Data Leakage
+
+**Desafío:**
+- Asegurar que los indicadores técnicos no utilizaran información futura
+- Mantener la integridad temporal en el cálculo de features
+
+**Implementación:**
+```python
+# En 1_preprocesamiento.py
+# Ejemplo de cálculo correcto de indicadores técnicos
+def calculate_technical_indicators(df):
+    # Usar solo datos hasta t-1 para calcular indicadores
+    df['SMA_7'] = df['close'].shift(1).rolling(window=7).mean()
+    df['EMA_21'] = df['close'].shift(1).ewm(span=21, adjust=False).mean()
+    # ... más indicadores
+    return df
+```
+
+**Validación:**
+- Implementamos pruebas para verificar la alineación temporal de features
+- Documentamos claramente la ventana temporal de cada indicador
+
+### D. Optimización de Hiperparámetros
+
+**Evolución del Enfoque:**
+De búsqueda exhaustiva:
+```python
+# Enfoque inicial en 3_modelo_xgboost.py
+param_grid = {
+    'n_estimators': np.arange(100, 1500, 100),
+    'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1],
+    'max_depth': np.arange(3, 11),
+    # ... más parámetros
+}
+```
+
+A configuración validada:
+```python
+# Configuración final optimizada
+best_params = {
+    'n_estimators': 1000,
+    'learning_rate': 0.01,
+    'max_depth': 5,
+    'subsample': 0.8,
+    'colsample_bytree': 0.8
+}
+```
+
+**Resultado:**
+- Reducción significativa en tiempo de entrenamiento
+- Mantenimiento de la calidad de predicciones
+- Mayor reproducibilidad de resultados
+
+### E. Prácticas de Ingeniería y Escalabilidad
+
+**Estructura Estandarizada:**
+```
+proyecto/
+├── modelos/
+│   ├── xgboost/
+│   ├── lightgbm/
+│   └── sarima/
+├── resultados/
+│   └── comparacion/
+└── graficos/
+```
+
+**Automatización:**
+```python
+# En 6_comparacion_modelos.py
+def main():
+    # Pipeline completo automatizado
+    for horizonte in [1, 6, 12]:
+        print(f"\nProcesando horizonte t+{horizonte}")
+        # Carga de modelos
+        # Generación de predicciones
+        # Cálculo de métricas
+        # Generación de visualizaciones
+```
+
+**Beneficios:**
+- Facilidad para extender a nuevos horizontes temporales
+- Reproducibilidad de experimentos
+- Comparación sistemática entre modelos
+
+### F. Lecciones Aprendidas
+
+1. **Métricas y Objetivos:**
+   - La elección de métricas debe alinearse con el comportamiento deseado del modelo
+   - Las métricas estándar pueden necesitar adaptación para casos específicos
+
+2. **Validación y Testing:**
+   - Importancia de validar no solo la precisión sino también el comportamiento del modelo
+   - Necesidad de pruebas específicas para data leakage en series temporales
+
+3. **Eficiencia Computacional:**
+   - Balance entre exploración exhaustiva y conocimiento previo
+   - Valor de la experiencia en la selección de hiperparámetros
+
+4. **Ingeniería de Software:**
+   - Importancia de una estructura de proyecto clara y mantenible
+   - Beneficios de la automatización en el proceso de experimentación
+
+## VI. Conclusiones y Trabajo Futuro
 
 ### A. Conclusiones Principales
 
@@ -515,7 +666,7 @@ Los resultados de la evaluación comparativa muestran el siguiente desempeño pa
    - Investigar la transferibilidad del modelo a otros activos
    - Explorar la interpretabilidad de las predicciones
 
-## VI. Referencias
+## VII. Referencias
 
 [1] T. Chen and C. Guestrin, "XGBoost: A Scalable Tree Boosting System," in Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2016, pp. 785-794.
 
