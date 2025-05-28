@@ -168,6 +168,42 @@ def generar_tabla_predicciones(df_test, predicciones, horizonte=1, n_muestras=10
         f.write(f"### Comparación de Predicciones para Horizonte t+{horizonte}\n\n")
         f.write(tabla.to_markdown(index=False))
 
+def plot_metricas_comparativas(metricas_por_horizonte):
+    """Generar gráficos comparativos de métricas para todos los horizontes"""
+    # Preparar datos para plotting
+    horizontes = [1, 6, 12]
+    modelos = list(metricas_por_horizonte[1].keys())  # Obtener nombres de modelos
+    
+    # Para cada métrica (RMSE, MAE, R2)
+    for metrica in ['RMSE', 'MAE', 'R2']:
+        plt.figure(figsize=(12, 6))
+        
+        # Preparar datos para el gráfico
+        valores = {modelo: [] for modelo in modelos}
+        for horizonte in horizontes:
+            for modelo in modelos:
+                valores[modelo].append(metricas_por_horizonte[horizonte][modelo][metrica])
+        
+        # Crear el gráfico de barras agrupadas
+        x = np.arange(len(horizontes))
+        width = 0.25  # Ancho de las barras
+        
+        # Plotear barras para cada modelo
+        for i, (modelo, vals) in enumerate(valores.items()):
+            plt.bar(x + i*width - width, vals, width, label=modelo)
+        
+        plt.xlabel('Horizonte de Predicción')
+        plt.ylabel(metrica)
+        plt.title(f'Comparación de {metrica} por Modelo y Horizonte')
+        plt.xticks(x, [f't+{h}' for h in horizontes])
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        
+        # Guardar el gráfico
+        plt.savefig(f'graficos_comparacion/comparacion_{metrica.lower()}.png', dpi=300, bbox_inches='tight')
+        plt.close()
+
 def main():
     # Crear directorios necesarios
     crear_directorios()
@@ -186,6 +222,9 @@ def main():
     print(feature_cols)
     print("\nPrimeras 5 filas de features:")
     print(df_test[feature_cols].head())
+    
+    # Almacenar métricas de todos los horizontes
+    metricas_por_horizonte = {}
     
     # Para cada horizonte
     for horizonte in [1, 6, 12]:
@@ -275,10 +314,17 @@ def main():
             print(f"\nMétricas para {modelo}:")
             print(pd.Series(metricas[modelo]))
         
+        # Guardar métricas para este horizonte
+        metricas_por_horizonte[horizonte] = metricas
+        
         # Guardar métricas en formato markdown
         with open(f'resultados/comparacion/metricas_t{horizonte}.md', 'w') as f:
             f.write(f"### Métricas de Error para Horizonte t+{horizonte}\n\n")
             f.write(pd.DataFrame(metricas).to_markdown())
+    
+    # Generar gráficos comparativos de métricas
+    print("\nGenerando gráficos comparativos de métricas...")
+    plot_metricas_comparativas(metricas_por_horizonte)
     
     print("\n¡Proceso completado!")
     print("Los resultados han sido guardados en:")
