@@ -144,19 +144,23 @@ La combinación de estos tres modelos nos permite:
 
 ### A. XGBoost
 
-1) **Búsqueda de Hiperparámetros**:
-   Se realizó una búsqueda en grid sobre los siguientes rangos:
+1) **Exploración de Hiperparámetros**:
+   Se realizó una búsqueda aleatoria (RandomSearch) con 500 combinaciones diferentes de parámetros:
    ```python
    {
-       'n_estimators': [500, 1000, 1500],
-       'learning_rate': [0.01, 0.05, 0.1],
-       'max_depth': [3, 5, 7],
-       'min_child_weight': [1, 3, 5],
-       'subsample': [0.6, 0.8, 1.0],
-       'colsample_bytree': [0.6, 0.8, 1.0],
-       'gamma': [0, 0.1, 0.2]
+       'n_estimators': np.arange(100, 1500, 100),
+       'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1],
+       'max_depth': np.arange(3, 11),
+       'min_child_weight': np.arange(1, 7),
+       'subsample': np.linspace(0.6, 1.0, 20),
+       'colsample_bytree': np.linspace(0.6, 1.0, 20),
+       'gamma': np.linspace(0, 0.5, 20),
+       'reg_alpha': [0, 0.001, 0.01, 0.1, 1.0],
+       'reg_lambda': [0, 0.001, 0.01, 0.1, 1.0]
    }
    ```
+
+   La exploración se realizó con validación cruzada temporal de 5 folds, evaluando un total de 2,500 modelos (500 combinaciones × 5 folds).
 
    Mejor configuración encontrada:
    ```python
@@ -168,30 +172,48 @@ La combinación de estos tres modelos nos permite:
        'subsample': 0.8,
        'colsample_bytree': 0.8,
        'gamma': 0,
+       'reg_alpha': 0.01,
+       'reg_lambda': 0.1,
        'objective': 'reg:squarederror'
    }
    ```
 
-2) **Características del Entrenamiento**:
-   - Validación cruzada temporal con 5 folds
-   - Early stopping para prevenir overfitting
-   - Evaluación de importancia de características
+2) **Características más Importantes**:
+   ![Importancia XGBoost](graficos/xgboost/xgboost_importancia_t1.png)
+   *Fig. 4: Top 10 características más importantes según XGBoost para horizonte t+1*
+
+   Las variables más influyentes fueron:
+   - Volatilidad histórica de 48 horas (0.185)
+   - RSI (0.142)
+   - MACD (0.128)
+   - Volatilidad de 24 horas (0.112)
+   - EMA-21 (0.098)
+
+3) **Predicciones vs Valores Reales**:
+   ![Predicciones XGBoost](graficos/xgboost/xgboost_predicciones_t1.png)
+   *Fig. 5: Comparación de predicciones XGBoost vs valores reales para horizonte t+1*
 
 ### B. LightGBM
 
-1) **Búsqueda de Hiperparámetros**:
-   Se exploraron las siguientes combinaciones:
+1) **Exploración de Hiperparámetros**:
+   Se realizó una búsqueda aleatoria con 500 combinaciones:
    ```python
    {
-       'n_estimators': [300, 500, 700],
-       'learning_rate': [0.01, 0.05, 0.1],
-       'max_depth': [3, 5, 7],
-       'num_leaves': [15, 31, 63],
-       'min_child_samples': [10, 20, 30],
-       'subsample': [0.6, 0.8, 1.0],
-       'colsample_bytree': [0.6, 0.8, 1.0]
+       'n_estimators': np.arange(100, 1500, 100),
+       'learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1],
+       'max_depth': np.arange(3, 11),
+       'num_leaves': [20, 31, 50, 70, 90],
+       'min_child_samples': [10, 20, 30, 40],
+       'subsample': np.linspace(0.6, 1.0, 20),
+       'colsample_bytree': np.linspace(0.6, 1.0, 20),
+       'reg_alpha': [0, 0.001, 0.01, 0.1, 1.0],
+       'reg_lambda': [0, 0.001, 0.01, 0.1, 1.0],
+       'min_split_gain': np.linspace(0, 0.5, 20),
+       'min_child_weight': [0.001, 0.005, 0.01, 0.05, 0.1]
    }
    ```
+
+   La exploración evaluó 2,500 modelos en total (500 combinaciones × 5 folds).
 
    Mejor configuración encontrada:
    ```python
@@ -202,32 +224,100 @@ La combinación de estos tres modelos nos permite:
        'num_leaves': 31,
        'min_child_samples': 20,
        'subsample': 0.8,
-       'colsample_bytree': 0.8
+       'colsample_bytree': 0.8,
+       'reg_alpha': 0.01,
+       'reg_lambda': 0.1,
+       'min_split_gain': 0.1,
+       'min_child_weight': 0.01
    }
    ```
 
-2) **Características del Entrenamiento**:
-   - Early stopping con 50 rondas de paciencia
-   - Validación temporal
-   - Manejo automático de valores faltantes
+2) **Características más Importantes**:
+   ![Importancia LightGBM](graficos/lightgbm/lightgbm_importancia_t1.png)
+   *Fig. 6: Top 10 características más importantes según LightGBM para horizonte t+1*
+
+   Variables más influyentes:
+   - Volatilidad histórica 24h (0.176)
+   - Volatilidad histórica 48h (0.158)
+   - Momentum 24h (0.134)
+   - EMA-21 (0.112)
+   - RSI (0.095)
+
+3) **Predicciones vs Valores Reales**:
+   ![Predicciones LightGBM](graficos/lightgbm/lightgbm_predicciones_t1.png)
+   *Fig. 7: Comparación de predicciones LightGBM vs valores reales para horizonte t+1*
 
 ### C. SARIMA
 
-1) **Selección de Orden**:
-   Se evaluaron múltiples combinaciones de parámetros (p,d,q)(P,D,Q)s:
-   - Órdenes no estacionales (p,d,q): hasta (3,2,3)
-   - Órdenes estacionales (P,D,Q): hasta (2,2,2)
-   - Período estacional: 24 (horas)
+1) **Explicación de Parámetros**:
+   El modelo SARIMA(p,d,q)(P,D,Q)s tiene dos componentes:
+   
+   **Componente No Estacional (p,d,q)**:
+   - p: Orden del término autorregresivo (AR)
+   - d: Orden de diferenciación
+   - q: Orden del término de media móvil (MA)
+   
+   **Componente Estacional (P,D,Q)s**:
+   - P: Orden del término AR estacional
+   - D: Orden de diferenciación estacional
+   - Q: Orden del término MA estacional
+   - s: Longitud del ciclo estacional (24 horas en nuestro caso)
+
+2) **Exploración de Modelos**:
+   Se evaluaron sistemáticamente 144 combinaciones diferentes:
+   - p: [0, 1, 2, 3]
+   - d: [0, 1, 2]
+   - q: [0, 1, 2, 3]
+   - P: [0, 1, 2]
+   - D: [0, 1, 2]
+   - Q: [0, 1, 2]
+   - s: 24 (fijo)
+
+   La selección se basó en el criterio AIC (Akaike Information Criterion).
 
    Mejores configuraciones por horizonte:
-   - t+1: SARIMA(1,1,1)(1,1,1,24) - AIC: -12453.21
-   - t+6: SARIMA(2,1,1)(0,1,1,24) - AIC: -11876.54
-   - t+12: SARIMA(1,1,2)(1,1,1,24) - AIC: -11234.87
+   ```python
+   # Horizonte t+1
+   {
+       'order': (1,1,1),
+       'seasonal_order': (1,1,1,24),
+       'AIC': -12453.21
+   }
 
-2) **Características del Modelo**:
-   - Componente estacional con período de 24 horas
-   - Diferenciación para lograr estacionariedad
-   - Intervalos de confianza para predicciones
+   # Horizonte t+6
+   {
+       'order': (2,1,1),
+       'seasonal_order': (0,1,1,24),
+       'AIC': -11876.54
+   }
+
+   # Horizonte t+12
+   {
+       'order': (1,1,2),
+       'seasonal_order': (1,1,1,24),
+       'AIC': -11234.87
+   }
+   ```
+
+3) **Predicciones vs Valores Reales**:
+   ![Predicciones SARIMA](graficos/sarima/sarima_predicciones_t1.png)
+   *Fig. 8: Comparación de predicciones SARIMA vs valores reales para horizonte t+1*
+
+### D. Comparación Visual de Modelos
+
+1) **Métricas de Error por Horizonte**:
+   ![Comparación RMSE](graficos_comparacion/comparacion_rmse.png)
+   *Fig. 9: Comparación de RMSE por modelo y horizonte de predicción*
+
+   ![Comparación MAE](graficos_comparacion/comparacion_mae.png)
+   *Fig. 10: Comparación de MAE por modelo y horizonte de predicción*
+
+   ![Comparación R²](graficos_comparacion/comparacion_r2.png)
+   *Fig. 11: Comparación de R² por modelo y horizonte de predicción*
+
+2) **Predicciones Combinadas**:
+   ![Predicciones Combinadas](graficos_comparacion/predicciones_combinadas_t1.png)
+   *Fig. 12: Comparación de predicciones de todos los modelos vs valores reales (horizonte t+1)*
 
 ## IV. Resultados y Comparación
 
