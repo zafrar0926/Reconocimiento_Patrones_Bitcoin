@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import matplotlib
+matplotlib.use('Agg')  # Usar backend no interactivo
 import matplotlib.pyplot as plt
 from pathlib import Path
 import joblib
@@ -30,7 +32,7 @@ def plot_predicciones(y_true, y_pred, titulo, guardar_como=None):
     plt.tight_layout()
     if guardar_como:
         plt.savefig(guardar_como)
-    plt.show()
+    plt.close()
 
 def ajustar_sarima_rapido(serie, horizonte):
     """Ajusta un modelo SARIMA con configuraciones predefinidas según el horizonte"""
@@ -116,12 +118,20 @@ try:
                 df_test[f'target_t{horizonte}']
             ]).dropna()
             
+            # Asegurar que el índice temporal esté correctamente configurado
+            serie_total.index = pd.DatetimeIndex(serie_total.index)
+            serie_total = serie_total.asfreq('H')
+            
             print(f"Total de datos disponibles: {len(serie_total)}")
             
             # Usar solo los últimos 2000 datos para entrenamiento
             n_train = min(2000, int(len(serie_total) * 0.8))
             serie_train = serie_total[-n_train:]
             serie_test = serie_total[-n_train:].tail(500)  # Usar últimos 500 datos para test
+            
+            # Asegurar que los índices estén correctamente configurados
+            serie_train = serie_train.asfreq('H')
+            serie_test = serie_test.asfreq('H')
             
             print(f"Datos de entrenamiento: {len(serie_train)}")
             print(f"Datos de prueba: {len(serie_test)}")
@@ -158,6 +168,15 @@ try:
                 'aic': resultado.aic,
                 'test_scores': metricas
             }
+            
+            # Guardar predicciones
+            predicciones_df = pd.DataFrame({
+                'timestamp': y_true.index,
+                'real': y_true.values,
+                'prediccion': pred_mean
+            })
+            predicciones_df.to_csv(f'resultados/sarima/predicciones_t{horizonte}.csv', index=False)
+            print(f"Predicciones guardadas en 'resultados/sarima/predicciones_t{horizonte}.csv'")
             
             # Guardar modelo
             joblib.dump(resultado, f'modelos/sarima/modelo_sarima_t{horizonte}.joblib')

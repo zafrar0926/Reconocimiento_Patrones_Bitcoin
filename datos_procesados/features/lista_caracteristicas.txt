@@ -1,43 +1,86 @@
-Características creadas:
-- close
-- vwap
-- hour
-- day
-- weekday
-- month
-- year
-- fase_estacional_daily
-- fase_estacional_weekly
-- fase_estacional_monthly
-- target_t1
-- target_t6
-- target_t12
-- SMA_7
-- SMA_21
-- EMA_7
-- EMA_21
-- MACD
-- MACD_signal
-- MACD_diff
-- RSI
-- Stoch_k
-- Stoch_d
+=== CARACTERÍSTICAS CREADAS ===
+
+1. RETORNOS PASADOS:
+- return_t1: Retorno del período t-1 a t
+- return_t2: Retorno del período t-2 a t-1
+- return_t3: Retorno del período t-3 a t-2
+
+2. INDICADORES TÉCNICOS (todos calculados con precios hasta t-1):
+- SMA_7, SMA_21: Medias móviles simples
+- EMA_7, EMA_21: Medias móviles exponenciales
+- MACD, MACD_signal, MACD_diff: Indicadores MACD
+- RSI: Índice de fuerza relativa
+- Stoch_k, Stoch_d: Oscilador estocástico
+- BB_high, BB_low, BB_mid: Bandas de Bollinger
+
+- CCI: Commodity Channel Index (desviación del precio respecto a su media)
+- WilliamsR: Oscilador de sobrecompra/sobreventa
+- TSI: True Strength Index (momentum)
+5. CARACTERÍSTICAS DE TENDENCIA (calculadas con precios hasta t-1):
+- rolling_mean_24h, rolling_mean_168h: Media móvil de 24 y 168 horas
+- trend_diff_24h, trend_diff_168h: Diferencia entre el precio y su media móvil
+
+3. CARACTERÍSTICAS DE VOLATILIDAD Y MOMENTUM:
+- volatility_Xh: Desviación estándar de retornos pasados
+- momentum_Xh: Retornos acumulados en ventanas pasadas
+
+4. CARACTERÍSTICAS TEMPORALES:
+- Variables cíclicas de hora, día, semana y mes
+
+=== DIMENSIONES ===
+Dataset de entrenamiento: (27715, 55)
+Dataset de prueba: (6790, 55)
+
+=== LISTA COMPLETA DE FEATURES ===
 - BB_high
 - BB_low
 - BB_mid
+- CCI
+- EMA_21
+- EMA_7
+- MACD
+- MACD_diff
+- MACD_signal
+- RSI
+- SMA_21
+- SMA_7
+- Stoch_d
+- Stoch_k
+- TSI
+- WilliamsR
+- day
+- fase_estacional_daily
+- fase_estacional_monthly
+- fase_estacional_weekly
+- hammer
+- high
+- hour
+- hour_cos
+- hour_sin
+- low
+- momentum_12h
+- momentum_168h
+- momentum_24h
+- month
+- month_cos
+- month_sin
+- price_speed
+- return_t1
+- return_t2
+- return_t3
+- rolling_mean_168h
+- rolling_mean_24h
+- swing_high
+- swing_low
+- trend_3
+- trend_diff_168h
+- trend_diff_24h
+- trend_up
 - volatility_12h
+- volatility_168h
 - volatility_24h
 - volatility_48h
-- volatility_168h
-- momentum_12h
-- momentum_24h
-- momentum_168h
-- hour_sin
-- hour_cos
-- weekday_sin
+- weekday
 - weekday_cos
-- month_sin
-- month_cos
-
-Dimensiones del dataset de entrenamiento: (27716, 39)
-Dimensiones del dataset de prueba: (6791, 39)
+- weekday_sin
+- year

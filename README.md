@@ -355,98 +355,143 @@ Los resultados de la evaluación comparativa muestran el siguiente desempeño pa
 
 1. **Horizonte t+1 (1 hora)**:
    - XGBoost:
-     * RMSE: 0.00549
-     * MAE: 0.00361
-     * R²: 0.00009
+     * RMSE: 0.005477
+     * MAE: 0.003613
+     * R²: 0.004861
    
    - LightGBM:
-     * RMSE: 0.00549
-     * MAE: 0.00361
-     * R²: 0.00062
+     * RMSE: 0.005520
+     * MAE: 0.003657
+     * R²: -0.010892
    
    - SARIMA:
-     * RMSE: 0.00565
-     * MAE: 0.00400
-     * R²: -0.00575
+     * RMSE: 0.005684
+     * MAE: 0.003860
+     * R²: -0.071628
 
 2. **Horizonte t+6 (6 horas)**:
    - XGBoost:
-     * RMSE: 0.01312
-     * MAE: 0.00898
-     * R²: -0.00029
+     * RMSE: 0.013331
+     * MAE: 0.009244
+     * R²: -0.033270
    
    - LightGBM:
-     * RMSE: 0.01312
-     * MAE: 0.00898
-     * R²: -0.00025
+     * RMSE: 0.013681
+     * MAE: 0.009500
+     * R²: -0.088229
    
    - SARIMA:
-     * RMSE: 0.01559
-     * MAE: 0.01146
-     * R²: -0.39078
+     * RMSE: 0.023073
+     * MAE: 0.019590
+     * R²: -2.095218
 
 3. **Horizonte t+12 (12 horas)**:
    - XGBoost:
-     * RMSE: 0.01850
-     * MAE: 0.01310
-     * R²: -0.00046
+     * RMSE: 0.019779
+     * MAE: 0.014442
+     * R²: -0.144098
    
    - LightGBM:
-     * RMSE: 0.01850
-     * MAE: 0.01310
-     * R²: -0.00047
+     * RMSE: 0.020336
+     * MAE: 0.014888
+     * R²: -0.209377
    
    - SARIMA:
-     * RMSE: 0.02191
-     * MAE: 0.01803
-     * R²: -0.54218
+     * RMSE: 0.024562
+     * MAE: 0.019955
+     * R²: -0.764344
 
 ### B. Análisis de Resultados
 
 1. **Comparación General**:
-   - XGBoost y LightGBM muestran un rendimiento muy similar en todos los horizontes
-   - SARIMA muestra un deterioro más pronunciado en horizontes más largos
-   - Todos los modelos tienen mejor desempeño en el horizonte más corto (t+1)
+   - XGBoost muestra el mejor rendimiento en todos los horizontes
+   - LightGBM está muy cerca de XGBoost, con diferencias marginales
+   - SARIMA muestra un deterioro significativo en horizontes más largos
+   - El rendimiento de todos los modelos se degrada a medida que aumenta el horizonte de predicción
 
 2. **Fortalezas y Debilidades**:
-   - **XGBoost y LightGBM**:
-     * Mantienen un rendimiento más estable a través de los horizontes
-     * Muestran errores de predicción muy similares
-     * Tienen una ligera ventaja en horizontes más largos
+   - **XGBoost**:
+     * Mejor rendimiento general en todos los horizontes
+     * Mayor estabilidad en las predicciones
+     * Mejor manejo de la varianza en horizontes largos
+   
+   - **LightGBM**:
+     * Rendimiento muy cercano a XGBoost
+     * Mayor velocidad de entrenamiento
+     * Ligeramente más sensible a la varianza en horizontes largos
    
    - **SARIMA**:
-     * Mejor en predicciones a muy corto plazo
-     * Deterioro significativo en horizontes más largos
-     * Mayor variabilidad en las predicciones
+     * Rendimiento aceptable en horizonte t+1
+     * Deterioro exponencial en horizontes más largos
+     * Alta sensibilidad a la varianza
 
 3. **Implicaciones Prácticas**:
-   - Para trading algorítmico de alta frecuencia (horizonte t+1), cualquiera de los tres modelos podría ser viable
-   - Para horizontes más largos (t+6, t+12), los modelos de machine learning muestran clara superioridad
-   - La similitud entre XGBoost y LightGBM sugiere que la elección entre ellos podría basarse en consideraciones de implementación (velocidad, recursos computacionales) más que en rendimiento
+   - Para trading de alta frecuencia (t+1), XGBoost y LightGBM son prácticamente intercambiables
+   - Para horizontes medios y largos (t+6, t+12), XGBoost muestra una ventaja clara
+   - SARIMA podría ser útil como modelo complementario solo para predicciones muy cortas
+   - La diferencia en R² sugiere que los modelos de machine learning capturan mejor la no linealidad del mercado
+
+4. **Análisis de Overfitting**:
+   ![Train vs Test XGBoost](graficos/xgboost/train_test_comparison_t1.png)
+   *Fig. 18: Comparación Train vs Test para XGBoost en horizonte t+1*
+
+   ![Train vs Test LightGBM](graficos/lightgbm/train_test_comparison_t1.png)
+   *Fig. 19: Comparación Train vs Test para LightGBM en horizonte t+1*
+
+   - Los gráficos de train vs test muestran que:
+     * Ambos modelos mantienen un balance adecuado entre bias y varianza
+     * No hay evidencia significativa de overfitting
+     * La degradación en horizontes largos se debe a la naturaleza del problema, no al modelado
 
 ## V. Conclusiones y Trabajo Futuro
 
 ### A. Conclusiones Principales
 
-1. Los modelos de machine learning (XGBoost y LightGBM) demuestran mayor robustez y estabilidad en comparación con SARIMA, especialmente en horizontes de predicción más largos.
+1. **Rendimiento Comparativo**:
+   - XGBoost demuestra el mejor rendimiento general, con ventajas más pronunciadas en horizontes largos
+   - LightGBM ofrece un rendimiento muy cercano a XGBoost, con diferencias marginales
+   - SARIMA muestra limitaciones significativas en horizontes más allá de t+1
 
-2. La predicción de retornos de Bitcoin se vuelve significativamente más difícil conforme aumenta el horizonte temporal, como se evidencia en el deterioro de todas las métricas.
+2. **Degradación por Horizonte**:
+   - La precisión de las predicciones se deteriora notablemente al aumentar el horizonte temporal
+   - El R² negativo en horizontes largos sugiere la dificultad inherente de predecir retornos a largo plazo
+   - La degradación es menos pronunciada en los modelos de machine learning
 
-3. La similitud en el rendimiento entre XGBoost y LightGBM sugiere que han alcanzado un nivel cercano al óptimo para la información disponible.
+3. **Implicaciones para Trading**:
+   - Los modelos son más adecuados para estrategias de trading de alta frecuencia
+   - XGBoost y LightGBM podrían usarse de manera complementaria para validación cruzada
+   - SARIMA podría servir como modelo de control para horizontes muy cortos
+
+4. **Consideraciones de Implementación**:
+   - La regularización y el control de varianza son cruciales para el rendimiento
+   - Los modelos de machine learning muestran mejor capacidad para capturar no linealidades
+   - El balance entre complejidad y rendimiento favorece a XGBoost
 
 ### B. Trabajo Futuro
 
-1. **Mejoras Propuestas**:
-   - Incorporar datos de sentimiento y análisis de redes sociales
-   - Explorar modelos de deep learning (LSTM, Transformers)
-   - Implementar ensambles de modelos
-   - Investigar la incorporación de datos de order book
+1. **Mejoras Técnicas Propuestas**:
+   - Implementar técnicas de regularización más avanzadas
+   - Explorar arquitecturas de ensemble personalizadas
+   - Investigar métodos de calibración de probabilidad
+   - Desarrollar features específicas para cada horizonte temporal
 
 2. **Extensiones del Estudio**:
-   - Ampliar a otras criptomonedas
+   - Incorporar datos de sentimiento y análisis de redes sociales
+   - Explorar modelos de deep learning (LSTM, Transformers)
    - Evaluar el impacto de diferentes frecuencias de datos
    - Desarrollar estrategias de trading basadas en las predicciones
-   - Incorporar análisis de riesgo y gestión de portafolio
+
+3. **Consideraciones Prácticas**:
+   - Optimizar la pipeline de predicción para trading en tiempo real
+   - Implementar sistemas de monitoreo de drift y reentrenamiento
+   - Desarrollar métricas de evaluación específicas para trading
+   - Incorporar análisis de costos de transacción y slippage
+
+4. **Investigación Adicional**:
+   - Estudiar la estabilidad de las predicciones en diferentes condiciones de mercado
+   - Analizar el impacto de eventos macroeconómicos
+   - Investigar la transferibilidad del modelo a otros activos
+   - Explorar la interpretabilidad de las predicciones
 
 ## VI. Referencias
 
@@ -469,3 +514,93 @@ Los resultados de la evaluación comparativa muestran el siguiente desempeño pa
 ## Apéndice: Estructura del Proyecto
 
 ```
+proyecto/
+│
+├── datos_procesados/
+│   └── features/
+│       ├── btc_features_train.csv
+│       └── btc_features_test.csv
+│
+├── modelos/
+│   ├── xgboost/
+│   │   ├── modelo_xgboost_t1.joblib
+│   │   ├── modelo_xgboost_t6.joblib
+│   │   └── modelo_xgboost_t12.joblib
+│   │
+│   ├── lightgbm/
+│   │   ├── modelo_lightgbm_t1.joblib
+│   │   ├── modelo_lightgbm_t6.joblib
+│   │   └── modelo_lightgbm_t12.joblib
+│   │
+│   └── sarima/
+│       ├── modelo_sarima_t1.joblib
+│       ├── modelo_sarima_t6.joblib
+│       └── modelo_sarima_t12.joblib
+│
+├── graficos/
+│   ├── analisis_temporal/
+│   │   ├── retornos_log.png
+│   │   ├── autocorrelacion.png
+│   │   └── volatilidad.png
+│   │
+│   ├── xgboost/
+│   │   ├── xgboost_importancia_t1.png
+│   │   ├── xgboost_predicciones_t1.png
+│   │   └── train_test_comparison_t1.png
+│   │
+│   ├── lightgbm/
+│   │   ├── lightgbm_importancia_t1.png
+│   │   ├── lightgbm_predicciones_t1.png
+│   │   └── train_test_comparison_t1.png
+│   │
+│   └── sarima/
+│       ├── sarima_predicciones_t1.png
+│       ├── sarima_predicciones_t6.png
+│       └── sarima_predicciones_t12.png
+│
+├── graficos_comparacion/
+│   ├── predicciones_vs_real_t1.png
+│   ├── predicciones_vs_real_t6.png
+│   ├── predicciones_vs_real_t12.png
+│   ├── distribucion_errores_t1.png
+│   ├── distribucion_errores_t6.png
+│   └── distribucion_errores_t12.png
+│
+├── resultados/
+│   ├── xgboost/
+│   │   ├── resultados_xgboost.csv
+│   │   └── predicciones_test_t*.csv
+│   │
+│   ├── lightgbm/
+│   │   ├── resultados_lightgbm.csv
+│   │   └── predicciones_test_t*.csv
+│   │
+│   ├── sarima/
+│   │   ├── resultados_sarima.csv
+│   │   └── predicciones_t*.csv
+│   │
+│   └── comparacion/
+│       ├── metricas_t1.md
+│       ├── metricas_t6.md
+│       ├── metricas_t12.md
+│       └── tabla_predicciones_t*.md
+│
+├── 1_preprocesamiento.py
+├── 2_analisis_exploratorio.py
+├── 3_modelo_xgboost.py
+├── 4_modelo_LightGBM.py
+├── 5_modelo_SARIMA.py
+├── 6_comparacion_modelos.py
+└── README.md
+```
+
+Los archivos principales son:
+
+1. `1_preprocesamiento.py`: Limpieza y preparación de datos, feature engineering
+2. `2_analisis_exploratorio.py`: Análisis estadístico y visualización de datos
+3. `3_modelo_xgboost.py`: Implementación y entrenamiento del modelo XGBoost
+4. `4_modelo_LightGBM.py`: Implementación y entrenamiento del modelo LightGBM
+5. `5_modelo_SARIMA.py`: Implementación y entrenamiento del modelo SARIMA
+6. `6_comparacion_modelos.py`: Evaluación y comparación de los tres modelos
+
+Cada script está documentado y puede ejecutarse de manera independiente, aunque se recomienda seguir el orden numérico para reproducir el análisis completo.

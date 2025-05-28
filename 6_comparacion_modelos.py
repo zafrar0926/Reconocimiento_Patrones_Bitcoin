@@ -6,6 +6,7 @@ from pathlib import Path
 import joblib
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import warnings
+from datetime import datetime, timedelta
 warnings.filterwarnings('ignore')
 
 def crear_directorios():
@@ -145,6 +146,28 @@ def plot_distribucion_errores(errores, horizonte, guardar_como=None):
         plt.savefig(guardar_como, dpi=300, bbox_inches='tight')
     plt.close()
 
+def generar_tabla_predicciones(df_test, predicciones, horizonte=1, n_muestras=10):
+    """Generar tabla comparativa de las últimas n predicciones"""
+    # Crear DataFrame con timestamp y valor real
+    tabla = pd.DataFrame({
+        'Fecha': df_test.index[-n_muestras:],
+        'Real': df_test[f'target_t{horizonte}'].iloc[-n_muestras:]
+    })
+    
+    # Agregar predicciones de cada modelo
+    for modelo, pred in predicciones.items():
+        tabla[modelo] = pred[-n_muestras:]
+    
+    # Formatear la tabla
+    tabla['Fecha'] = tabla['Fecha'].dt.strftime('%Y-%m-%d %H:%M')
+    for col in tabla.columns[1:]:  # Todas las columnas excepto Fecha
+        tabla[col] = tabla[col].map('{:.6f}'.format)
+    
+    # Guardar tabla en formato markdown
+    with open(f'resultados/comparacion/tabla_predicciones_t{horizonte}.md', 'w') as f:
+        f.write(f"### Comparación de Predicciones para Horizonte t+{horizonte}\n\n")
+        f.write(tabla.to_markdown(index=False))
+
 def main():
     # Crear directorios necesarios
     crear_directorios()
@@ -159,6 +182,11 @@ def main():
     target_cols = ['target_t1', 'target_t6', 'target_t12']
     feature_cols = [col for col in df_test.columns if col not in target_cols]
     
+    print("\nColumnas de features disponibles:")
+    print(feature_cols)
+    print("\nPrimeras 5 filas de features:")
+    print(df_test[feature_cols].head())
+    
     # Para cada horizonte
     for horizonte in [1, 6, 12]:
         print(f"\nProcesando horizonte t+{horizonte}")
@@ -167,50 +195,95 @@ def main():
         
         # Cargar y predecir con XGBoost
         try:
+            print(f"Cargando modelo XGBoost t+{horizonte}...")
             modelo_xgb = joblib.load(f'modelos/xgboost/modelo_xgboost_t{horizonte}.joblib')
-            pred_xgb = modelo_xgb.predict(df_test[feature_cols])
-            predicciones['XGBoost'] = pred_xgb
-            errores['XGBoost'] = pred_xgb - df_test[f'target_t{horizonte}']
+            print("Modelo XGBoost cargado. Feature importances:")
+            print(pd.Series(modelo_xgb.feature_importances_, index=feature_cols).sort_values(ascending=False).head())
+            
+            X_test = df_test[feature_cols].fillna(method='ffill').fillna(method='bfill')
+            print("\nEstadísticas de los features procesados:")
+            print(X_test.describe())
+            
+            predicciones['XGBoost'] = modelo_xgb.predict(X_test)
+            print("\nEstadísticas de las predicciones XGBoost:")
+            print(pd.Series(predicciones['XGBoost']).describe())
+            
+            errores['XGBoost'] = predicciones['XGBoost'] - df_test[f'target_t{horizonte}']
+            print("XGBoost: OK")
         except Exception as e:
-            print(f"Error al cargar/predecir XGBoost: {str(e)}")
+            print(f"Error al cargar/predecir XGBoost t+{horizonte}: {e}")
         
         # Cargar y predecir con LightGBM
         try:
+            print(f"\nCargando modelo LightGBM t+{horizonte}...")
             modelo_lgb = joblib.load(f'modelos/lightgbm/modelo_lightgbm_t{horizonte}.joblib')
-            pred_lgb = modelo_lgb.predict(df_test[feature_cols])
-            predicciones['LightGBM'] = pred_lgb
-            errores['LightGBM'] = pred_lgb - df_test[f'target_t{horizonte}']
+            print("Modelo LightGBM cargado. Feature importances:")
+            print(pd.Series(modelo_lgb.feature_importances_, index=feature_cols).sort_values(ascending=False).head())
+            
+            X_test_lgb = df_test[feature_cols].fillna(method='ffill').fillna(method='bfill')
+            predicciones['LightGBM'] = modelo_lgb.predict(X_test_lgb)
+            print("\nEstadísticas de las predicciones LightGBM:")
+            print(pd.Series(predicciones['LightGBM']).describe())
+            
+            errores['LightGBM'] = predicciones['LightGBM'] - df_test[f'target_t{horizonte}']
+            print("LightGBM: OK")
         except Exception as e:
-            print(f"Error al cargar/predecir LightGBM: {str(e)}")
+            print(f"Error al cargar/predecir LightGBM t+{horizonte}: {e}")
         
         # Cargar y predecir con SARIMA
         try:
+            print(f"\nCargando modelo SARIMA t+{horizonte}...")
             modelo_sarima = joblib.load(f'modelos/sarima/modelo_sarima_t{horizonte}.joblib')
-            pred_sarima = modelo_sarima.get_forecast(steps=len(df_test)).predicted_mean
-            predicciones['SARIMA'] = pred_sarima
-            errores['SARIMA'] = pred_sarima - df_test[f'target_t{horizonte}']
-        except Exception as e:
-            print(f"Error al cargar/predecir SARIMA: {str(e)}")
-        
-        if predicciones:
-            # Generar gráfico de predicciones vs real
-            plot_predicciones_vs_real(
-                df_test,
-                predicciones,
-                horizonte,
-                f'graficos_comparacion/predicciones_vs_real_t{horizonte}.png'
-            )
             
-            # Generar gráfico de distribución de errores
-            plot_distribucion_errores(
-                errores,
-                horizonte,
-                f'graficos_comparacion/distribucion_errores_t{horizonte}.png'
-            )
+            # Para SARIMA, usamos solo la serie temporal objetivo
+            serie_temporal = df_test[f'target_t{horizonte}'].copy()
+            
+            # Realizar predicciones directamente para todo el período
+            predicciones_sarima = modelo_sarima.get_forecast(steps=len(serie_temporal))
+            predicciones['SARIMA'] = predicciones_sarima.predicted_mean.values  # Convertir a array de numpy
+            
+            errores['SARIMA'] = predicciones['SARIMA'] - df_test[f'target_t{horizonte}'].values  # Usar .values para asegurar compatibilidad
+            print("SARIMA: OK")
+            
+        except Exception as e:
+            print(f"Error al cargar/predecir SARIMA t+{horizonte}: {e}")
+            print("Tipo de error:", type(e))
+            import traceback
+            print(traceback.format_exc())
+        
+        # Generar tabla de predicciones
+        print("\nGenerando tabla de predicciones...")
+        generar_tabla_predicciones(df_test, predicciones, horizonte)
+        
+        # Generar gráficos
+        print("Generando gráficos...")
+        plot_predicciones_vs_real(df_test, predicciones, horizonte, 
+                                f'graficos_comparacion/predicciones_vs_real_t{horizonte}.png')
+        
+        plot_distribucion_errores(errores, horizonte,
+                                f'graficos_comparacion/distribucion_errores_t{horizonte}.png')
+        
+        # Calcular y guardar métricas
+        print("\nCalculando métricas...")
+        metricas = {}
+        for modelo in predicciones.keys():
+            metricas[modelo] = {
+                'RMSE': np.sqrt(np.mean(errores[modelo]**2)),
+                'MAE': np.mean(np.abs(errores[modelo])),
+                'R2': 1 - np.sum(errores[modelo]**2) / np.sum((df_test[f'target_t{horizonte}'] - df_test[f'target_t{horizonte}'].mean())**2)
+            }
+            print(f"\nMétricas para {modelo}:")
+            print(pd.Series(metricas[modelo]))
+        
+        # Guardar métricas en formato markdown
+        with open(f'resultados/comparacion/metricas_t{horizonte}.md', 'w') as f:
+            f.write(f"### Métricas de Error para Horizonte t+{horizonte}\n\n")
+            f.write(pd.DataFrame(metricas).to_markdown())
     
     print("\n¡Proceso completado!")
     print("Los resultados han sido guardados en:")
     print("- graficos_comparacion/")
+    print("- resultados/comparacion/")
 
 if __name__ == "__main__":
     main() 

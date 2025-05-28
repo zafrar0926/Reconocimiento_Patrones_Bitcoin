@@ -1,11 +1,11 @@
 Mejores parámetros por horizonte:
 
 Horizonte target_t1:
-{'subsample': np.float64(0.6), 'reg_lambda': 0.01, 'reg_alpha': 0.001, 'n_estimators': np.int64(200), 'min_child_weight': np.int64(5), 'max_depth': np.int64(4), 'learning_rate': 0.001, 'gamma': np.float64(0.0), 'colsample_bytree': np.float64(0.6)}
+{'subsample': 0.9, 'scale_pos_weight': 1, 'reg_lambda': 0.1, 'reg_alpha': 0.01, 'n_estimators': np.int64(350), 'min_child_weight': 3, 'max_depth': 5, 'learning_rate': 0.005, 'gamma': 0, 'colsample_bytree': 0.9}
 
 Horizonte target_t6:
-{'subsample': np.float64(0.6631578947368421), 'reg_lambda': 0, 'reg_alpha': 0.01, 'n_estimators': np.int64(900), 'min_child_weight': np.int64(2), 'max_depth': np.int64(6), 'learning_rate': 0.1, 'gamma': np.float64(0.3421052631578947), 'colsample_bytree': np.float64(0.7684210526315789)}
+{'subsample': 0.8, 'scale_pos_weight': 1, 'reg_lambda': 1, 'reg_alpha': 1, 'n_estimators': np.int64(300), 'min_child_weight': 1, 'max_depth': 5, 'learning_rate': 0.05, 'gamma': 0, 'colsample_bytree': 0.6}
 
 Horizonte target_t12:
-{'subsample': np.float64(0.6631578947368421), 'reg_lambda': 0, 'reg_alpha': 0.01, 'n_estimators': np.int64(900), 'min_child_weight': np.int64(2), 'max_depth': np.int64(6), 'learning_rate': 0.1, 'gamma': np.float64(0.3421052631578947), 'colsample_bytree': np.float64(0.7684210526315789)}
+{'subsample': 0.8, 'scale_pos_weight': 1, 'reg_lambda': 1, 'reg_alpha': 1, 'n_estimators': np.int64(300), 'min_child_weight': 1, 'max_depth': 5, 'learning_rate': 0.05, 'gamma': 0, 'colsample_bytree': 0.6}
 

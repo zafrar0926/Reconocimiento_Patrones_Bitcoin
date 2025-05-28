@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Usar backend no interactivo
 import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.tsa.seasonal import seasonal_decompose
@@ -54,9 +56,7 @@ def plot_serie_temporal(serie, titulo, guardar_como=None):
     plt.legend()
     if guardar_como:
         plt.savefig(guardar_como)
-        plt.close()
-    else:
-        plt.show()
+    plt.close()
 
 # 1. Análisis de la serie temporal
 print("Análisis Estadístico Descriptivo:")
