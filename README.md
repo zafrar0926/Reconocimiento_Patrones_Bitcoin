@@ -454,10 +454,10 @@ Los resultados de la evaluación comparativa muestran el siguiente desempeño pa
    - La diferencia en R² sugiere que los modelos de machine learning capturan mejor la no linealidad del mercado
 
 4. **Análisis de Overfitting**:
-   ![Train vs Test XGBoost](graficos/xgboost/train_test_comparison_t1.png)
+   ![Train vs Test XGBoost](graficos/xgboost/xgboost_train_test_comparison_t1.png)
    *Fig. 30: Comparación Train vs Test para XGBoost en horizonte t+1*
 
-   ![Train vs Test LightGBM](graficos/lightgbm/train_test_comparison_t1.png)
+   ![Train vs Test LightGBM](graficos/lightgbm/lightbm_train_test_comparison_t1.png)
    *Fig. 31: Comparación Train vs Test para LightGBM en horizonte t+1*
 
    - Los gráficos de train vs test muestran que:
