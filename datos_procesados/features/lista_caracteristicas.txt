@@ -1,0 +1,43 @@
+Características creadas:
+- close
+- vwap
+- hour
+- day
+- weekday
+- month
+- year
+- fase_estacional_daily
+- fase_estacional_weekly
+- fase_estacional_monthly
+- target_t1
+- target_t6
+- target_t12
+- SMA_7
+- SMA_21
+- EMA_7
+- EMA_21
+- MACD
+- MACD_signal
+- MACD_diff
+- RSI
+- Stoch_k
+- Stoch_d
+- BB_high
+- BB_low
+- BB_mid
+- volatility_12h
+- volatility_24h
+- volatility_48h
+- volatility_168h
+- momentum_12h
+- momentum_24h
+- momentum_168h
+- hour_sin
+- hour_cos
+- weekday_sin
+- weekday_cos
+- month_sin
+- month_cos
+
+Dimensiones del dataset de entrenamiento: (27716, 39)
+Dimensiones del dataset de prueba: (6791, 39)

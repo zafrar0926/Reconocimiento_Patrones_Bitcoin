@@ -1,0 +1,11 @@
+Mejores parámetros por horizonte:
+
+Horizonte target_t1:
+{'subsample': 0.7, 'reg_lambda': 0, 'reg_alpha': 0.001, 'num_leaves': 90, 'n_estimators': 100, 'min_split_gain': 0, 'min_child_weight': 0.01, 'min_child_samples': 30, 'max_depth': 7, 'learning_rate': 0.001, 'colsample_bytree': 0.8}
+
+Horizonte target_t6:
+{'subsample': 0.7, 'reg_lambda': 0.01, 'reg_alpha': 0.001, 'num_leaves': 20, 'n_estimators': 1000, 'min_split_gain': 0.4, 'min_child_weight': 0.005, 'min_child_samples': 20, 'max_depth': 10, 'learning_rate': 0.05, 'colsample_bytree': 0.9}
+
+Horizonte target_t12:
+{'subsample': 0.7, 'reg_lambda': 0.01, 'reg_alpha': 0.001, 'num_leaves': 20, 'n_estimators': 1000, 'min_split_gain': 0.4, 'min_child_weight': 0.005, 'min_child_samples': 20, 'max_depth': 10, 'learning_rate': 0.05, 'colsample_bytree': 0.9}
+

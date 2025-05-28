@@ -1,0 +1,7 @@
+Resultados prueba ADF:
+Estadístico ADF: -26.24843918437317
+p-value: 0.0
+Valores críticos:
+	1%: -3.4305379139817878
+	5%: -2.8616230533214395
+	10%: -2.566814206675299

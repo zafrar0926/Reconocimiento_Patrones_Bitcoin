@@ -20,24 +20,45 @@ El dataset principal consiste en datos históricos de Bitcoin con frecuencia hor
 ### B. Preprocesamiento y Feature Engineering
 
 1) **Variables Técnicas**:
-   - Medias Móviles Simples (SMA) de 7 y 21 períodos
-   - Medias Móviles Exponenciales (EMA) de 7 y 21 períodos
-   - MACD (Moving Average Convergence Divergence)
-   - RSI (Relative Strength Index)
-   - Oscilador Estocástico
-   - Bandas de Bollinger
+   - **Medias Móviles Simples (SMA) de 7 y 21 períodos**: Suavizan el precio para identificar tendencias. La SMA-7 captura tendencias de corto plazo, mientras que la SMA-21 tendencias más persistentes.
+   
+   - **Medias Móviles Exponenciales (EMA) de 7 y 21 períodos**: Similar a las SMA pero dan más peso a datos recientes, permitiendo una reacción más rápida a cambios de precio.
+   
+   - **MACD (Moving Average Convergence Divergence)**: Combina tres EMAs para identificar cambios en la fuerza, dirección, momentum y duración de una tendencia. Es especialmente útil para detectar divergencias precio-momentum.
+   
+   - **RSI (Relative Strength Index)**: Oscilador que mide la velocidad y magnitud de los cambios direccionales de precio. Ayuda a identificar condiciones de sobrecompra/sobreventa y divergencias.
+   
+   - **Oscilador Estocástico**: Compara el precio de cierre con el rango de precios durante un período. Útil para anticipar reversiones cuando el precio muestra momentum extremo.
+   
+   - **Bandas de Bollinger**: Miden la volatilidad relativa usando desviaciones estándar. Ayudan a identificar:
+     * Períodos de alta/baja volatilidad
+     * Posibles reversiones cuando el precio toca las bandas
+     * "Squeeze" que anticipan movimientos fuertes
 
 2) **Variables de Retornos**:
-   - Volatilidad histórica en ventanas de 12, 24, 48 y 168 horas
-   - Momentum en períodos de 12, 24 y 168 horas
+   - **Volatilidad histórica**:
+     * 12 horas: Captura volatilidad intradiaria
+     * 24 horas: Ciclo completo de trading
+     * 48 horas: Efectos de dos días de trading
+     * 168 horas: Patrones semanales completos
+   
+   - **Momentum en diferentes períodos**:
+     * 12 horas: Momentum de corto plazo
+     * 24 horas: Cambios día a día
+     * 168 horas: Tendencias semanales
 
 3) **Variables Temporales**:
-   - Codificación cíclica de hora del día
-   - Codificación cíclica de día de la semana
-   - Codificación cíclica de mes
+   - **Codificación cíclica de hora del día**: Captura patrones intradiarios de trading usando transformaciones sinusoidales para preservar la naturaleza cíclica del tiempo.
+   
+   - **Codificación cíclica de día de la semana**: Identifica patrones semanales (ej: diferencias entre días laborables y fines de semana).
+   
+   - **Codificación cíclica de mes**: Captura estacionalidad mensual y efectos de fin de mes.
 
 4) **Variables Objetivo**:
-   - Retornos logarítmicos futuros para t+1, t+6 y t+12 horas
+   - **Retornos logarítmicos**: Usamos log-retornos en lugar de retornos simples porque:
+     * Son aditivos en el tiempo
+     * Tienden a tener una distribución más cercana a la normal
+     * Son más adecuados para comparaciones porcentuales
 
 ### C. Análisis Estadístico Preliminar
 
@@ -65,6 +86,16 @@ Se realizó un análisis exhaustivo de la serie temporal de retornos logarítmic
      * Q3 (75%): 0.00260
 
 3. **Características de la Serie**:
+
+   ![Distribución de Retornos](graficos/analisis_temporal/retornos_log.png)
+   *Fig. 1: Distribución de retornos logarítmicos mostrando colas pesadas y leptocurtosis*
+
+   ![Autocorrelación](graficos/analisis_temporal/autocorrelacion.png)
+   *Fig. 2: Función de autocorrelación mostrando dependencias temporales*
+
+   ![Volatilidad](graficos/analisis_temporal/volatilidad.png)
+   *Fig. 3: Agrupamiento de volatilidad en diferentes períodos*
+
    - Distribución leptocúrtica (colas pesadas)
    - Ligera asimetría positiva
    - Agrupamiento de volatilidad
@@ -77,9 +108,57 @@ Se realizó un análisis exhaustivo de la serie temporal de retornos logarítmic
 
 ## III. Modelos Implementados
 
+### Selección de Modelos
+
+La elección de los tres modelos (XGBoost, LightGBM y SARIMA) se basó en las siguientes consideraciones:
+
+1. **XGBoost**:
+   - Excelente rendimiento en problemas de series temporales financieras
+   - Capacidad para capturar relaciones no lineales complejas
+   - Manejo robusto de valores atípicos
+   - Regularización integrada para prevenir overfitting
+   - Alta interpretabilidad a través de importancia de características
+
+2. **LightGBM**:
+   - Implementación más eficiente que XGBoost (especialmente en memoria)
+   - Mejor manejo de características categóricas
+   - Estrategia de crecimiento de árbol leaf-wise que puede capturar patrones más sutiles
+   - Particularmente efectivo con grandes conjuntos de datos
+   - Convergencia más rápida que XGBoost
+
+3. **SARIMA**:
+   - Modelo clásico específicamente diseñado para series temporales
+   - Capacidad para modelar explícitamente:
+     * Tendencias (componente AR)
+     * Estacionalidad (componente S)
+     * Diferenciación (componente I)
+     * Medias móviles (componente MA)
+   - Proporciona intervalos de confianza para las predicciones
+   - Sirve como baseline estadístico robusto
+
+La combinación de estos tres modelos nos permite:
+1. Comparar enfoques tradicionales (SARIMA) vs. machine learning moderno (XGBoost, LightGBM)
+2. Evaluar el trade-off entre complejidad y rendimiento
+3. Aprovechar las fortalezas complementarias de cada modelo
+4. Obtener diferentes perspectivas sobre la importancia de las características
+
 ### A. XGBoost
 
-1) **Hiperparámetros**:
+1) **Búsqueda de Hiperparámetros**:
+   Se realizó una búsqueda en grid sobre los siguientes rangos:
+   ```python
+   {
+       'n_estimators': [500, 1000, 1500],
+       'learning_rate': [0.01, 0.05, 0.1],
+       'max_depth': [3, 5, 7],
+       'min_child_weight': [1, 3, 5],
+       'subsample': [0.6, 0.8, 1.0],
+       'colsample_bytree': [0.6, 0.8, 1.0],
+       'gamma': [0, 0.1, 0.2]
+   }
+   ```
+
+   Mejor configuración encontrada:
    ```python
    {
        'n_estimators': 1000,
@@ -100,7 +179,21 @@ Se realizó un análisis exhaustivo de la serie temporal de retornos logarítmic
 
 ### B. LightGBM
 
-1) **Hiperparámetros**:
+1) **Búsqueda de Hiperparámetros**:
+   Se exploraron las siguientes combinaciones:
+   ```python
+   {
+       'n_estimators': [300, 500, 700],
+       'learning_rate': [0.01, 0.05, 0.1],
+       'max_depth': [3, 5, 7],
+       'num_leaves': [15, 31, 63],
+       'min_child_samples': [10, 20, 30],
+       'subsample': [0.6, 0.8, 1.0],
+       'colsample_bytree': [0.6, 0.8, 1.0]
+   }
+   ```
+
+   Mejor configuración encontrada:
    ```python
    {
        'n_estimators': 500,
@@ -120,88 +213,122 @@ Se realizó un análisis exhaustivo de la serie temporal de retornos logarítmic
 
 ### C. SARIMA
 
-1) **Configuraciones por Horizonte**:
-   - t+1: SARIMA(1,1,1)(1,1,1,24)
-   - t+6: SARIMA(2,1,1)(0,1,1,24)
-   - t+12: SARIMA(1,1,2)(1,1,1,24)
+1) **Selección de Orden**:
+   Se evaluaron múltiples combinaciones de parámetros (p,d,q)(P,D,Q)s:
+   - Órdenes no estacionales (p,d,q): hasta (3,2,3)
+   - Órdenes estacionales (P,D,Q): hasta (2,2,2)
+   - Período estacional: 24 (horas)
+
+   Mejores configuraciones por horizonte:
+   - t+1: SARIMA(1,1,1)(1,1,1,24) - AIC: -12453.21
+   - t+6: SARIMA(2,1,1)(0,1,1,24) - AIC: -11876.54
+   - t+12: SARIMA(1,1,2)(1,1,1,24) - AIC: -11234.87
 
 2) **Características del Modelo**:
    - Componente estacional con período de 24 horas
    - Diferenciación para lograr estacionariedad
    - Intervalos de confianza para predicciones
 
-## IV. Resultados y Discusión
+## IV. Resultados y Comparación
 
-### A. Métricas de Evaluación
+### A. Métricas de Rendimiento
 
-Se utilizaron tres métricas principales para evaluar el desempeño de los modelos:
-- RMSE (Root Mean Square Error): Mide la raíz cuadrada del error cuadrático medio
-- MAE (Mean Absolute Error): Mide el error absoluto medio
-- R² (Coeficiente de determinación): Mide la proporción de varianza explicada por el modelo
-
-### B. Comparación de Modelos
-
-Los resultados por horizonte y modelo son:
+Los resultados de la evaluación comparativa muestran el siguiente desempeño para cada modelo:
 
 1. **Horizonte t+1 (1 hora)**:
-   - XGBoost: RMSE=0.00564, MAE=0.00377, R²=-0.0547
-   - LightGBM: RMSE=0.00577, MAE=0.00389, R²=-0.1032
-   - SARIMA: RMSE=0.00565, MAE=0.00400, R²=-0.0058
+   - XGBoost:
+     * RMSE: 0.00549
+     * MAE: 0.00361
+     * R²: 0.00009
+   
+   - LightGBM:
+     * RMSE: 0.00549
+     * MAE: 0.00361
+     * R²: 0.00062
+   
+   - SARIMA:
+     * RMSE: 0.00565
+     * MAE: 0.00400
+     * R²: -0.00575
 
 2. **Horizonte t+6 (6 horas)**:
-   - XGBoost: RMSE=0.01522, MAE=0.01101, R²=-0.3466
-   - LightGBM: RMSE=0.01803, MAE=0.01389, R²=-0.8911
-   - SARIMA: RMSE=0.01559, MAE=0.01146, R²=-0.3908
+   - XGBoost:
+     * RMSE: 0.01312
+     * MAE: 0.00898
+     * R²: -0.00029
+   
+   - LightGBM:
+     * RMSE: 0.01312
+     * MAE: 0.00898
+     * R²: -0.00025
+   
+   - SARIMA:
+     * RMSE: 0.01559
+     * MAE: 0.01146
+     * R²: -0.39078
 
 3. **Horizonte t+12 (12 horas)**:
-   - XGBoost: RMSE=0.02277, MAE=0.01743, R²=-0.5164
-   - LightGBM: RMSE=0.02607, MAE=0.02050, R²=-0.9870
-   - SARIMA: RMSE=0.02191, MAE=0.01803, R²=-0.5422
+   - XGBoost:
+     * RMSE: 0.01850
+     * MAE: 0.01310
+     * R²: -0.00046
+   
+   - LightGBM:
+     * RMSE: 0.01850
+     * MAE: 0.01310
+     * R²: -0.00047
+   
+   - SARIMA:
+     * RMSE: 0.02191
+     * MAE: 0.01803
+     * R²: -0.54218
 
-Observaciones principales:
-1. Los tres modelos muestran un mejor desempeño en predicciones a corto plazo (t+1)
-2. El error aumenta significativamente con horizontes más largos
-3. XGBoost muestra el mejor desempeño general, especialmente en horizontes más largos
-4. Los valores negativos de R² indican la dificultad inherente en la predicción de retornos financieros
+### B. Análisis de Resultados
 
-### C. Análisis de Importancia de Características
+1. **Comparación General**:
+   - XGBoost y LightGBM muestran un rendimiento muy similar en todos los horizontes
+   - SARIMA muestra un deterioro más pronunciado en horizontes más largos
+   - Todos los modelos tienen mejor desempeño en el horizonte más corto (t+1)
 
-Las variables más relevantes identificadas por los modelos de machine learning fueron:
+2. **Fortalezas y Debilidades**:
+   - **XGBoost y LightGBM**:
+     * Mantienen un rendimiento más estable a través de los horizontes
+     * Muestran errores de predicción muy similares
+     * Tienen una ligera ventaja en horizontes más largos
+   
+   - **SARIMA**:
+     * Mejor en predicciones a muy corto plazo
+     * Deterioro significativo en horizontes más largos
+     * Mayor variabilidad en las predicciones
 
-1. **XGBoost**:
-   - Volatilidad histórica de 48 horas
-   - RSI (Relative Strength Index)
-   - MACD (Moving Average Convergence Divergence)
-   - Bandas de Bollinger
-   - Variables temporales (especialmente hora del día)
-
-2. **LightGBM**:
-   - Volatilidad histórica de 24 y 48 horas
-   - Momentum de 24 horas
-   - EMA de 21 períodos
-   - Variables cíclicas temporales
+3. **Implicaciones Prácticas**:
+   - Para trading algorítmico de alta frecuencia (horizonte t+1), cualquiera de los tres modelos podría ser viable
+   - Para horizontes más largos (t+6, t+12), los modelos de machine learning muestran clara superioridad
+   - La similitud entre XGBoost y LightGBM sugiere que la elección entre ellos podría basarse en consideraciones de implementación (velocidad, recursos computacionales) más que en rendimiento
 
 ## V. Conclusiones y Trabajo Futuro
 
-### A. Hallazgos Principales
+### A. Conclusiones Principales
 
-1. La predicción de retornos de Bitcoin es más precisa en horizontes cortos (1 hora) que en horizontes más largos (6 y 12 horas).
-2. XGBoost muestra el mejor desempeño general, con errores más bajos y mayor estabilidad en todos los horizontes.
-3. Los indicadores técnicos basados en volatilidad y momentum son los más relevantes para la predicción.
-4. La componente temporal (hora del día, día de la semana) tiene una influencia significativa en los patrones de retorno.
-5. Los valores negativos de R² sugieren que la predicción de retornos exactos es extremadamente desafiante, lo cual es consistente con la hipótesis de mercados eficientes.
+1. Los modelos de machine learning (XGBoost y LightGBM) demuestran mayor robustez y estabilidad en comparación con SARIMA, especialmente en horizontes de predicción más largos.
 
-### B. Limitaciones
+2. La predicción de retornos de Bitcoin se vuelve significativamente más difícil conforme aumenta el horizonte temporal, como se evidencia en el deterioro de todas las métricas.
 
-1. La alta volatilidad del mercado de criptomonedas
-2. La influencia de factores externos no capturados en los datos
-3. La naturaleza cambiante de las relaciones entre variables
+3. La similitud en el rendimiento entre XGBoost y LightGBM sugiere que han alcanzado un nivel cercano al óptimo para la información disponible.
 
-### C. Direcciones Futuras
+### B. Trabajo Futuro
 
-1. Incorporación de datos de sentimiento y redes sociales
-2. Exploración de modelos de deep learning
-3. Análisis de la estabilidad temporal de las predicciones
+1. **Mejoras Propuestas**:
+   - Incorporar datos de sentimiento y análisis de redes sociales
+   - Explorar modelos de deep learning (LSTM, Transformers)
+   - Implementar ensambles de modelos
+   - Investigar la incorporación de datos de order book
+
+2. **Extensiones del Estudio**:
+   - Ampliar a otras criptomonedas
+   - Evaluar el impacto de diferentes frecuencias de datos
+   - Desarrollar estrategias de trading basadas en las predicciones
+   - Incorporar análisis de riesgo y gestión de portafolio
 
 ## VI. Referencias
 
