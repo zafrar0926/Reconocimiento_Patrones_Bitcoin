@@ -305,19 +305,47 @@ La combinación de estos tres modelos nos permite:
 
 ### D. Comparación Visual de Modelos
 
-1) **Métricas de Error por Horizonte**:
+1) **Predicciones vs Valores Reales**:
+   
+   Para cada horizonte de predicción, se muestra la evolución temporal de las predicciones contra los valores reales:
+
+   **Horizonte t+1 (1 hora)**:
+   ![Predicciones vs Real t1](graficos_comparacion/predicciones_vs_real_t1.png)
+   *Fig. 9: Comparación de predicciones vs valores reales para horizonte t+1*
+
+   **Horizonte t+6 (6 horas)**:
+   ![Predicciones vs Real t6](graficos_comparacion/predicciones_vs_real_t6.png)
+   *Fig. 10: Comparación de predicciones vs valores reales para horizonte t+6*
+
+   **Horizonte t+12 (12 horas)**:
+   ![Predicciones vs Real t12](graficos_comparacion/predicciones_vs_real_t12.png)
+   *Fig. 11: Comparación de predicciones vs valores reales para horizonte t+12*
+
+2) **Distribución de Errores**:
+   
+   Para cada horizonte, se muestra la distribución de los errores de predicción:
+
+   **Horizonte t+1**:
+   ![Distribución Errores t1](graficos_comparacion/distribucion_errores_t1.png)
+   *Fig. 12: Distribución de errores de predicción para horizonte t+1*
+
+   **Horizonte t+6**:
+   ![Distribución Errores t6](graficos_comparacion/distribucion_errores_t6.png)
+   *Fig. 13: Distribución de errores de predicción para horizonte t+6*
+
+   **Horizonte t+12**:
+   ![Distribución Errores t12](graficos_comparacion/distribucion_errores_t12.png)
+   *Fig. 14: Distribución de errores de predicción para horizonte t+12*
+
+3) **Métricas de Error por Horizonte**:
    ![Comparación RMSE](graficos_comparacion/comparacion_rmse.png)
-   *Fig. 9: Comparación de RMSE por modelo y horizonte de predicción*
+   *Fig. 15: Comparación de RMSE por modelo y horizonte de predicción*
 
    ![Comparación MAE](graficos_comparacion/comparacion_mae.png)
-   *Fig. 10: Comparación de MAE por modelo y horizonte de predicción*
+   *Fig. 16: Comparación de MAE por modelo y horizonte de predicción*
 
    ![Comparación R²](graficos_comparacion/comparacion_r2.png)
-   *Fig. 11: Comparación de R² por modelo y horizonte de predicción*
-
-2) **Predicciones Combinadas**:
-   ![Predicciones Combinadas](graficos_comparacion/predicciones_combinadas_t1.png)
-   *Fig. 12: Comparación de predicciones de todos los modelos vs valores reales (horizonte t+1)*
+   *Fig. 17: Comparación de R² por modelo y horizonte de predicción*
 
 ## IV. Resultados y Comparación
 
