@@ -214,6 +214,11 @@ def main():
     df_test['timestamp'] = pd.to_datetime(df_test['timestamp'])
     df_test.set_index('timestamp', inplace=True)
     
+    # Usar solo los últimos 500 datos para comparación justa con SARIMA
+    df_test = df_test.tail(500)
+    print(f"\nUsando los últimos {len(df_test)} datos para comparación")
+    print(f"Rango de fechas: {df_test.index[0]} a {df_test.index[-1]}")
+    
     # Preparar features
     target_cols = ['target_t1', 'target_t6', 'target_t12']
     feature_cols = [col for col in df_test.columns if col not in target_cols]

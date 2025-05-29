@@ -777,3 +777,5 @@ Los archivos principales son:
 6. `6_comparacion_modelos.py`: Evaluación y comparación de los tres modelos
 
 Cada script está documentado y puede ejecutarse de manera independiente, aunque se recomienda seguir el orden numérico para reproducir el análisis completo.
+
+**Desarrollado por:** Santiago Zafra Rodríguez
